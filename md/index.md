@@ -4,6 +4,13 @@ header-includes:
 ---
 
 <div class=menu>
-+ [ranjith koroth](about.html)
++ [**Ranjith Koroth**](about.html)
 </div>
 <div class=b>
+
+## About 2hands2change.com and author
+
++ [About the author](#about-the-author)
++ [About 2hands2change.com](#about-2hands2change.com)
++ [Contact 2hands2change.com](#contact-2hands2change.com)
++ [Disclaimer](#disclaimer)
