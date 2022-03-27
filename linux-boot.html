@@ -161,10 +161,10 @@ contains programs like insmod and rmmod to load and unload modules.</p>
 <p>Kernel Once the required modules loaded, it passes the control to the
 actual kernel which resides in /boot/. An example kernel file has shown
 below.</p>
-<pre><code>[root@t-centos-7 ~]# ls -ltr /boot/vmlinuz-*
--rwxr-xr-x. 1 root root 6224704 Apr 20 12:57 /boot/vmlinuz-3.10.0-862.el7.x86_64
--rwxr-xr-x. 1 root root 6224704 Sep 18 17:29 /boot/vmlinuz-0-rescue-8d15c6bacf504a4b805f50bcc96dc30b
-[root@t-centos-7 ~]#</code></pre>
+<pre><code>[root@t-centos-7 ~]# ls -ltr /boot/vmlinuz-*    
+-rwxr-xr-x. 1 root root 6224704 Apr 20 12:57 /boot/vmlinuz-3.10.0-862.el7.x86_64    
+-rwxr-xr-x. 1 root root 6224704 Sep 18 17:29 /boot/vmlinuz-0-rescue-8d15c6bacf504a4b805f50bcc96dc30b    
+[root@t-centos-7 ~]#    </code></pre>
 <p>Please note : Here vmlinuz-0-rescue-8d15c6bacf504a4b805f50bcc96dc30b
 is a rescue kernel for troubleshooting a system during a boot
 failure.</p>
@@ -173,9 +173,9 @@ than 10M.</p>
 <pre><code>[root@t-centos-7 ~]# du -sh /boot/vmlinuz-3.10.0-862.el7.x86_64
 6.0M    /boot/vmlinuz-3.10.0-862.el7.x86_64
 
-[root@t-centos-7 ~]# file /boot/vmlinuz-3.10.0-862.el7.x86_64
-/boot/vmlinuz-3.10.0-862.el7.x86_64: Linux kernel x86 boot executable bzImage, version 3.10.0-862.el7.x86_64 (builder@kbuilder.dev.centos.org) #1 SMP , RO-rootFS, swap_dev 0x5, Normal VGA
-[root@t-centos-7 ~]#</code></pre>
+[root@t-centos-7 ~]# file /boot/vmlinuz-3.10.0-862.el7.x86_64    
+/boot/vmlinuz-3.10.0-862.el7.x86_64: Linux kernel x86 boot executable bzImage, version 3.10.0-862.el7.x86_64 (builder@kbuilder.dev.centos.org) #1 SMP , RO-rootFS, swap_dev 0x5, Normal VGA    
+[root@t-centos-7 ~]#    </code></pre>
 <p>Once the kernel verifies the processor family and architecture and
 other required checks, it then initiate the first process PID 1
 depending on the system version. i.e. on older system it is /sbin/init
