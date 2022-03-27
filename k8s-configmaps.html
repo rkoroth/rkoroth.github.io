@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>k8s-configmaps</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="mystyle.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.7">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="rkorothconfigmaps-in-kubernetes"><a
+href="https://rkoroth.github.io"><strong>~rkoroth/</strong></a>ConfigMaps
+in Kubernetes</h1>
+<h2 id="configmaps-in-kubernetes">ConfigMaps in Kubernetes</h2>
+<p>ConfigMaps are key value pairs used for passing configuration
+information such as environment variable, command line arguments etc. to
+the containers inside a Pod.</p>
+<p>To explain this, I have created a small shell script acting as my
+application. It writes continuously to a file with the ConfigMap
+variable.</p>
+<p>My kubernetes setup is on Minikube.</p>
+<pre><code>root@ServerCrux#] kubectl version
+Client Version: version.Info{Major:&quot;1&quot;, Minor:&quot;17&quot;, GitVersion:&quot;v1.17.0&quot;, GitCommit:&quot;70132b0f130acc0bed193d9ba59dd186f0e634cf&quot;, GitTreeState:&quot;clean&quot;, BuildDate:&quot;2019-12-07T21:20:10Z&quot;, GoVersion:&quot;go1.13.4&quot;, Compiler:&quot;gc&quot;, Platform:&quot;linux/amd64&quot;}
+Server Version: version.Info{Major:&quot;1&quot;, Minor:&quot;14&quot;, GitVersion:&quot;v1.14.2&quot;, GitCommit:&quot;66049e3b21efe110454d67df4fa62b08ea79a19b&quot;, GitTreeState:&quot;clean&quot;, BuildDate:&quot;2019-05-16T16:14:56Z&quot;, GoVersion:&quot;go1.12.5&quot;, Compiler:&quot;gc&quot;, Platform:&quot;linux/amd64&quot;}
+root@ServerCrux#] </code></pre>
+<pre><code>root@minikube#] ls -ltr
+total 8
+-rw-r--r-- 1 root root  67 Jan 10 16:57 Dockerfile
+-rwxrwxrwx 1 root root 153 Jan 10 17:18 myapp.sh
+root@minikube#] </code></pre>
+<p>Test application</p>
+<pre><code>root@minikube#] more myapp.sh 
+#!/bin/sh
+
+x=10
+while [ $x -lt 100 ]; 
+do
+    sleep 1
+    echo &quot;I am running with ConfigMap variable $CONFIGMAP-VAR&quot; &gt;&gt; container-dir/output.txt
+done
+root@minikube#] 
+</code></pre>
+<p>Build a container with this application and base OS as centos.</p>
+<h2 id="container-build">Container build</h2>
+<pre><code>root@minikube#] more Dockerfile 
+FROM centos
+RUN mkdir /container-dir
+COPY myapp.sh /
+CMD /myapp.sh
+root@minikube#]</code></pre>
+<pre><code>root@minikube#] ls -ltr
+total 8
+-rwxrwxrwx 1 root root 154 Jan 10 16:41 myapp.sh
+-rw-r--r-- 1 root root  67 Jan 10 16:57 Dockerfile
+root@minikube#] 
+root@minikube#]
+root@minikube#] docker build --rm -t mycontainer .
+Sending build context to Docker daemon  3.072kB
+Step 1/4 : FROM centos
+ ---&gt; 0f3e07c0138f
+Step 2/4 : RUN mkdir /container-dir
+ ---&gt; Running in 7cdc77fd5d66
+Removing intermediate container 7cdc77fd5d66
+ ---&gt; 994ec3b7de50
+Step 3/4 : COPY myapp.sh /
+ ---&gt; b447267c0c94
+Step 4/4 : CMD /myapp.sh
+ ---&gt; Running in 1651fb93a4ac
+Removing intermediate container 1651fb93a4ac
+ ---&gt; 3c84c12339b2
+Successfully built 3c84c12339b2
+Successfully tagged mycontainer:latest
+root@minikube#] </code></pre>
+<p>The container image has been created successfully on my Minikube.</p>
+<pre><code>root@minikube#] docker images
+REPOSITORY                                TAG                 IMAGE ID            CREATED              SIZE
+mycontainer                               latest              3c84c12339b2        About a minute ago   220MB
+.
+.
+.
+.
+root@minikube#]</code></pre>
+<p>Now we can provision Pod with a ConfigMap using this image.</p>
+<h2 id="configmap-and-pod-definitions">ConfigMap and Pod
+definitions</h2>
+<p>On my host machine I have created the yaml file for ConfigMap and Pod
+as shown below.</p>
+<pre><code>root@ServerCrux#] more config.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myconfigmap
+  namespace: default
+data:
+  myvariable: Hello
+root@ServerCrux#] 
+</code></pre>
+<pre><code>root@ServerCrux#] more pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mytestpod
+spec:
+  containers:
+    - name: test-container
+      image: mycontainer
+      imagePullPolicy: Never
+      env:
+        - name: CONFIGMAP-VAR
+          valueFrom:
+            configMapKeyRef:
+              name: myconfigmap
+              key: myvariable
+root@ServerCrux#] 
+</code></pre>
+<p>Create the objects.</p>
+<pre><code>root@ServerCrux#] kubectl create -f config.yaml 
+configmap/myconfigmap created
+root@ServerCrux#]
+root@ServerCrux#] kubectl create -f pod.yaml 
+pod/mytestpod created
+root@ServerCrux#] </code></pre>
+<p>Pod and ConfigMap are configured.</p>
+<pre><code>root@ServerCrux#] kubectl get pods
+NAME        READY   STATUS    RESTARTS   AGE
+mytestpod   1/1     Running   0          51s
+root@ServerCrux#]
+root@ServerCrux#] kubectl get configmap
+NAME          DATA   AGE
+myconfigmap   1      60s
+root@ServerCrux#] 
+</code></pre>
+<p>Now login to the Pod and check the contents of the output.txt.</p>
+<pre><code>root@ServerCrux#] kubectl exec -it mytestpod /bin/bash
+[root@mytestpod /]# ls -ltr
+total 56
+drwxr-xr-x   2 root root 4096 May 11  2019 srv
+lrwxrwxrwx   1 root root    8 May 11  2019 sbin -&gt; usr/sbin
+drwxr-xr-x   2 root root 4096 May 11  2019 opt
+drwxr-xr-x   2 root root 4096 May 11  2019 mnt
+drwxr-xr-x   2 root root 4096 May 11  2019 media
+lrwxrwxrwx   1 root root    9 May 11  2019 lib64 -&gt; usr/lib64
+lrwxrwxrwx   1 root root    7 May 11  2019 lib -&gt; usr/lib
+drwxr-xr-x   2 root root 4096 May 11  2019 home
+lrwxrwxrwx   1 root root    7 May 11  2019 bin -&gt; usr/bin
+drwx------   2 root root 4096 Sep 27 17:13 lost+found
+drwxr-xr-x  12 root root 4096 Sep 27 17:13 usr
+drwxr-xr-x  20 root root 4096 Sep 27 17:13 var
+drwxrwxrwt   7 root root 4096 Sep 27 17:13 tmp
+dr-xr-x---   2 root root 4096 Sep 27 17:13 root
+-rwxrwxrwx   1 root root  153 Jan 10 17:18 myapp.sh
+dr-xr-xr-x  12 root root    0 Jan 10 17:18 sys
+drwxr-xr-x   1 root root 4096 Jan 10 17:18 etc
+dr-xr-xr-x 201 root root    0 Jan 10 17:18 proc
+drwxr-xr-x   1 root root 4096 Jan 10 17:18 run
+drwxr-xr-x   5 root root  360 Jan 10 17:18 dev
+drwxr-xr-x   1 root root 4096 Jan 10 17:19 container-dir
+[root@mytestpod /]#
+[root@mytestpod /]# tail -f container-dir/output.txt 
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+I am running with ConfigMap variable Hello
+^C
+[root@mytestpod /]# </code></pre>
+<p>You can see the variable defined in the ConfigMap written in the
+output.txt file.</p>
+<p>The intention of this page is to explain the basics of ConfigMaps. In
+real life there will be more configuration parameters in the
+ConfigMaps.</p>
+<p>If you have only fewer number of parameter, you can pass it to the
+container with environment option in the yaml file.</p>
+</body>
+</html>
