@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>linux-boot</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="mystyle.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.7">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="rkorothlinux-boot-process"><a
+href="https://rkoroth.github.io"><strong>~rkoroth/</strong></a>Linux
+Boot Process</h1>
+<h2 id="linux-boot-process">Linux Boot Process</h2>
+<p>Extensive knowledge of Linux boot process helps you to fix any boot
+related issues. It doesn’t require any in-depth knowledge of the
+underlying code, instead it requires only the knowledge about the
+critical files. Linux booting is a multistage process from the boot
+strap code to the shell until you get the login prompt. One can predict
+and troubleshoot an un-bootable system if he has clear understanding
+about the boot process.</p>
+<p>Firmware This is the very first stage of booting any system. When a
+system starts up, until the power good signal (gray cable in SMPS)
+triggers, CPU receives a reset signal from chip-set. It releases the
+reset once the power good signal activates and CPU starts executing the
+code. How does the CPU know where to start addressing the memory.? This
+is where EIP register comes into play. EIP register__Extended
+Instruction Pointer__ is the register where CPU look for the address of
+next instruction. When the system starts up, this register by default
+resets with an address 0xFFFFFFF0 and this action is hard coded. This
+location generally at the top of 4G address space and it is a ROM
+location contains the address of BIOS. This location has only 16bytes in
+size. This setup made in such a way back in the time of 8086 assuming
+there will not be any conflict with the installed RAM (Assuming that
+there cannot be any system with more than 4G RAM during 8086 era). Once
+the CPU identifies the BIOS starting address, it start addressing BIOS
+and executes the code in it. This stage is generally known as POST
+(Power On Self Test).</p>
+<p>During POST system verifies all the connected peripherals and loads
+its firmwares and identifies its status. Once the POST completes, it
+starts looking for the first boot device set in the CMOS. CMOS is a
+non-volatile memory and its generally integrated with the clock chip or
+inside the south bridge on modern systems. It requires a very low
+current power source to retain its content generally a small lithium
+battery (Known as CMOS battery).</p>
+<p>Bootstrap Once the system identifies the first boot device, lets say
+a hard disk, it address the MBR (Master Boot Record) which resides in
+Cylinder 0, head 0 and sector 1. Generally a sector of hard disk is
+512-bytes so as the first sector. The first 446 bytes of the first
+sector contains the MBR and the next 64 bytes reserved for partition
+table upto 4 partition. Without a partition table a hard disk is just a
+piece of metal so this is important. The last 2 bytes for the magic
+number - AA55. Magic number denotes the integrity of the MBR. A
+different magic number would be considered as invalid MBR by the BIOS
+and system would not boot. One thing should be noted here is MBR is not
+located in any filesystem, its on the raw part of the hard disk so it
+cannot be viewed from the file system. However a low level tool like
+“dd” can be used to read MBR.</p>
+<p>GRUB As you might already know, GRUB(GRand Unified Bootloader) is a
+boot loader like LILO (Linux Loader). GRUB has three stages of
+operation. Stage-1, 1.5 and 2. The above said MBR is the first stage of
+GRUB and it passes the control to GRUB stage 1.5 which resides in the
+MBR GAP.</p>
+<p>MBR GAP : After sector 0, from 1 to 63 sectors are free and is known
+as MBR GAP. This space is used for GRUB 1.5 which is ~32KB. (63*512).
+You might be wondering why there are multiple stages of GRUB. Because
+BIOS can read only the first 512 bytes of the boot device, and it is not
+sufficient for including all the required boot drivers for the system
+boot. GRUB 1.5 loads all the required modules and drivers specific to
+GRUB stage 2 to access the /boot partition and reads
+/boot/grub/grub.conf. This is where the system displays the boot
+menu.</p>
+<p>One important thing to be noted here is in the GRUB stage 2, it has
+knowledge about the file system and able to read /boot from an ext2/ext3
+file system instead of raw disk as in LILO. Also from GRUB 2 onward it
+can read /boot even from LVM partition too.</p>
+<p>GRUB version 0.9x known as GRUB legacy and version 1.9x known as
+GRUB-2</p>
+<p>GRUB 2 (precisely GRUB version 1.97) supports ext4 file system and
+doesn’t have separate stages (eg: stage1/1.5)</p>
+<p>A sample MBR.</p>
+<pre><code>[root@t-centos-7 ~]# dd if=/dev/sda of=masterbootrecord.bin bs=512 count=1
+1+0 records in
+1+0 records out
+512 bytes (512 B) copied, 0.00011735 s, 4.4 MB/s
+[root@t-centos-7 ~]# od -xa masterbootrecord.bin
+0000000    63eb    1090    d08e    00bc    b8b0    0000    d88e    c08e
+          k   c dle dle  so   P   &lt; nul   0   8 nul nul  so   X  so   @
+0000020    befb    7c00    00bf    b906    0200    a4f3    21ea    0006
+          {   &gt; nul   |   ? nul ack   9 nul stx   s   $   j   ! ack nul
+0000040    be00    07be    0438    0b75    c683    8110    fefe    7507
+        nul   &gt;   &gt; bel   8 eot   u  vt etx   F dle soh   ~   ~ bel   u
+0000740    0000    0000    0000    0000    0000    0000    0000    0000
+        nul nul nul nul nul nul nul nul nul nul nul nul nul nul nul nul
+0000760    0000    0000    0000    0000    0000    0000    0000    aa55
+        nul nul nul nul nul nul nul nul nul nul nul nul nul nul   U   *
+0001000
+
+[Output truncated]</code></pre>
+<p>dd command can be used for extracting MBR. In the above example
+/dev/sda is the boot disk. od command converts the binary data to
+hex.</p>
+<p>Initramfs Once the system read the grub.conf file, it identifies the
+location of initrd image from it. Initrd_Initial ramdisk_is a compressed
+file which contains all the required modules for the kernel. Older
+kernel uses initrd image file type which can be mounted as loop back
+device, whereas the newer kernel comes with initrd image type as CPIO
+archive. CPIO archive cannot be mounted instead it can be viewed using
+lsinitrd command. See below.</p>
+<pre><code>[root@t-centos-7 ~]# du -sh /boot/initramfs-3.10.0-862.el7.x86_64.img
+21M     /boot/initramfs-3.10.0-862.el7.x86_64.img
+
+[root@t-centos-7 ~]# file /boot/initramfs-3.10.0-862.el7.x86_64.img
+/boot/initramfs-3.10.0-862.el7.x86_64.img: ASCII cpio archive (SVR4 with no CRC)
+[root@t-centos-7 ~]#
+
+[root@t-centos-7 ~]# lsinitrd /boot/initramfs-3.10.0-862.el7.x86_64.img | head -20
+Image: /boot/initramfs-3.10.0-862.el7.x86_64.img: 21M
+========================================================================
+Early CPIO image
+========================================================================
+drwxr-xr-x   3 root     root            0 Sep 18 17:30 .
+-rw-r--r--   1 root     root            2 Sep 18 17:30 early_cpio
+drwxr-xr-x   3 root     root            0 Sep 18 17:30 kernel
+drwxr-xr-x   3 root     root            0 Sep 18 17:30 kernel/x86
+drwxr-xr-x   2 root     root            0 Sep 18 17:30 kernel/x86/microcode
+-rw-r--r--   1 root     root        97280 Sep 18 17:30 kernel/x86/microcode/GenuineIntel.bin
+========================================================================
+Version: dracut-033-535.el7
+
+Arguments: -f
+
+dracut modules:
+bash
+nss-softokn
+i18n
+network
+[root@t-centos-7 ~]#</code></pre>
+<p>Why initramfs..? actually kernel needs a lot of drivers and modules
+for accessing different types of hardware, and building a kernel with
+all the available drivers and modules make the kernel bulky and it
+cannot be used for systems with less memory footprint. Initramfs acts as
+a temporary bridge between actual kernel and the system. It builds based
+on the system configuration and assists kernel to load by providing all
+the required modules. for example, booting a system from SAN. It has
+similar file system structure of a system such as /etc, /lib etc and
+contains programs like insmod and rmmod to load and unload modules.</p>
+<p>Kernel Once the required modules loaded, it passes the control to the
+actual kernel which resides in /boot/. An example kernel file has shown
+below.</p>
+<pre><code>[root@t-centos-7 ~]# ls -ltr /boot/vmlinuz-*
+-rwxr-xr-x. 1 root root 6224704 Apr 20 12:57 /boot/vmlinuz-3.10.0-862.el7.x86_64
+-rwxr-xr-x. 1 root root 6224704 Sep 18 17:29 /boot/vmlinuz-0-rescue-8d15c6bacf504a4b805f50bcc96dc30b
+[root@t-centos-7 ~]#</code></pre>
+<p>Please note : Here vmlinuz-0-rescue-8d15c6bacf504a4b805f50bcc96dc30b
+is a rescue kernel for troubleshooting a system during a boot
+failure.</p>
+<p>kernel file is a compressed bzImage and generally the size is less
+than 10M.</p>
+<pre><code>[root@t-centos-7 ~]# du -sh /boot/vmlinuz-3.10.0-862.el7.x86_64
+6.0M    /boot/vmlinuz-3.10.0-862.el7.x86_64
+
+[root@t-centos-7 ~]# file /boot/vmlinuz-3.10.0-862.el7.x86_64
+/boot/vmlinuz-3.10.0-862.el7.x86_64: Linux kernel x86 boot executable bzImage, version 3.10.0-862.el7.x86_64 (builder@kbuilder.dev.centos.org) #1 SMP , RO-rootFS, swap_dev 0x5, Normal VGA
+[root@t-centos-7 ~]#</code></pre>
+<p>Once the kernel verifies the processor family and architecture and
+other required checks, it then initiate the first process PID 1
+depending on the system version. i.e. on older system it is /sbin/init
+and on RHEL-7 /usr/lib/systemd/systemd.</p>
+</body>
+</html>
