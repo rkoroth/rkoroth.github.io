@@ -87,10 +87,14 @@ menu.</p>
 knowledge about the file system and able to read /boot from an ext2/ext3
 file system instead of raw disk as in LILO. Also from GRUB 2 onward it
 can read /boot even from LVM partition too.</p>
+<blockquote>
 <p>GRUB version 0.9x known as GRUB legacy and version 1.9x known as
 GRUB-2</p>
+</blockquote>
+<blockquote>
 <p>GRUB 2 (precisely GRUB version 1.97) supports ext4 file system and
 doesn’t have separate stages (eg: stage1/1.5)</p>
+</blockquote>
 <p>A sample MBR.</p>
 <pre><code>[root@t-centos-7 ~]# dd if=/dev/sda of=masterbootrecord.bin bs=512 count=1
 1+0 records in
