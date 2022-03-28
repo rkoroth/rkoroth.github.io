@@ -32,23 +32,23 @@ critical files. Linux booting is a multistage process from the boot
 strap code to the shell until you get the login prompt. One can predict
 and troubleshoot an un-bootable system if he has clear understanding
 about the boot process.</p>
-<p>Firmware This is the very first stage of booting any system. When a
-system starts up, until the power good signal (gray cable in SMPS)
-triggers, CPU receives a reset signal from chip-set. It releases the
-reset once the power good signal activates and CPU starts executing the
-code. How does the CPU know where to start addressing the memory.? This
-is where EIP register comes into play. EIP register__Extended
-Instruction Pointer__ is the register where CPU look for the address of
-next instruction. When the system starts up, this register by default
-resets with an address 0xFFFFFFF0 and this action is hard coded. This
-location generally at the top of 4G address space and it is a ROM
-location contains the address of BIOS. This location has only 16bytes in
-size. This setup made in such a way back in the time of 8086 assuming
-there will not be any conflict with the installed RAM (Assuming that
-there cannot be any system with more than 4G RAM during 8086 era). Once
-the CPU identifies the BIOS starting address, it start addressing BIOS
-and executes the code in it. This stage is generally known as POST
-(Power On Self Test).</p>
+<p>Firmware<br />
+This is the very first stage of booting any system. When a system starts
+up, until the power good signal (gray cable in SMPS) triggers, CPU
+receives a reset signal from chip-set. It releases the reset once the
+power good signal activates and CPU starts executing the code. How does
+the CPU know where to start addressing the memory.? This is where EIP
+register comes into play. EIP register__Extended Instruction Pointer__
+is the register where CPU look for the address of next instruction. When
+the system starts up, this register by default resets with an address
+0xFFFFFFF0 and this action is hard coded. This location generally at the
+top of 4G address space and it is a ROM location contains the address of
+BIOS. This location has only 16bytes in size. This setup made in such a
+way back in the time of 8086 assuming there will not be any conflict
+with the installed RAM (Assuming that there cannot be any system with
+more than 4G RAM during 8086 era). Once the CPU identifies the BIOS
+starting address, it start addressing BIOS and executes the code in it.
+This stage is generally known as POST (Power On Self Test).</p>
 <p>During POST system verifies all the connected peripherals and loads
 its firmwares and identifies its status. Once the POST completes, it
 starts looking for the first boot device set in the CMOS. CMOS is a
@@ -56,24 +56,24 @@ non-volatile memory and its generally integrated with the clock chip or
 inside the south bridge on modern systems. It requires a very low
 current power source to retain its content generally a small lithium
 battery (Known as CMOS battery).</p>
-<p>Bootstrap Once the system identifies the first boot device, lets say
-a hard disk, it address the MBR (Master Boot Record) which resides in
-Cylinder 0, head 0 and sector 1. Generally a sector of hard disk is
-512-bytes so as the first sector. The first 446 bytes of the first
-sector contains the MBR and the next 64 bytes reserved for partition
-table upto 4 partition. Without a partition table a hard disk is just a
-piece of metal so this is important. The last 2 bytes for the magic
-number - AA55. Magic number denotes the integrity of the MBR. A
-different magic number would be considered as invalid MBR by the BIOS
-and system would not boot. One thing should be noted here is MBR is not
-located in any filesystem, its on the raw part of the hard disk so it
-cannot be viewed from the file system. However a low level tool like
-“dd” can be used to read MBR.</p>
-<p>GRUB As you might already know, GRUB(GRand Unified Bootloader) is a
-boot loader like LILO (Linux Loader). GRUB has three stages of
-operation. Stage-1, 1.5 and 2. The above said MBR is the first stage of
-GRUB and it passes the control to GRUB stage 1.5 which resides in the
-MBR GAP.</p>
+<p>Bootstrap<br />
+Once the system identifies the first boot device, lets say a hard disk,
+it address the MBR (Master Boot Record) which resides in Cylinder 0,
+head 0 and sector 1. Generally a sector of hard disk is 512-bytes so as
+the first sector. The first 446 bytes of the first sector contains the
+MBR and the next 64 bytes reserved for partition table upto 4 partition.
+Without a partition table a hard disk is just a piece of metal so this
+is important. The last 2 bytes for the magic number - AA55. Magic number
+denotes the integrity of the MBR. A different magic number would be
+considered as invalid MBR by the BIOS and system would not boot. One
+thing should be noted here is MBR is not located in any filesystem, its
+on the raw part of the hard disk so it cannot be viewed from the file
+system. However a low level tool like “dd” can be used to read MBR.</p>
+<p>GRUB<br />
+As you might already know, GRUB(GRand Unified Bootloader) is a boot
+loader like LILO (Linux Loader). GRUB has three stages of operation.
+Stage-1, 1.5 and 2. The above said MBR is the first stage of GRUB and it
+passes the control to GRUB stage 1.5 which resides in the MBR GAP.</p>
 <p>MBR GAP : After sector 0, from 1 to 63 sectors are free and is known
 as MBR GAP. This space is used for GRUB 1.5 which is ~32KB. (63*512).
 You might be wondering why there are multiple stages of GRUB. Because
@@ -117,13 +117,14 @@ doesn’t have separate stages (eg: stage1/1.5)</p>
 <p>dd command can be used for extracting MBR. In the above example
 /dev/sda is the boot disk. od command converts the binary data to
 hex.</p>
-<p>Initramfs Once the system read the grub.conf file, it identifies the
-location of initrd image from it. Initrd_Initial ramdisk_is a compressed
-file which contains all the required modules for the kernel. Older
-kernel uses initrd image file type which can be mounted as loop back
-device, whereas the newer kernel comes with initrd image type as CPIO
-archive. CPIO archive cannot be mounted instead it can be viewed using
-lsinitrd command. See below.</p>
+<p>Initramfs<br />
+Once the system read the grub.conf file, it identifies the location of
+initrd image from it. Initrd_Initial ramdisk_is a compressed file which
+contains all the required modules for the kernel. Older kernel uses
+initrd image file type which can be mounted as loop back device, whereas
+the newer kernel comes with initrd image type as CPIO archive. CPIO
+archive cannot be mounted instead it can be viewed using lsinitrd
+command. See below.</p>
 <pre><code>[root@t-centos-7 ~]# du -sh /boot/initramfs-3.10.0-862.el7.x86_64.img
 21M     /boot/initramfs-3.10.0-862.el7.x86_64.img
 
@@ -162,8 +163,9 @@ on the system configuration and assists kernel to load by providing all
 the required modules. for example, booting a system from SAN. It has
 similar file system structure of a system such as /etc, /lib etc and
 contains programs like insmod and rmmod to load and unload modules.</p>
-<p>Kernel Once the required modules loaded, it passes the control to the
-actual kernel which resides in /boot/. An example kernel file has shown
+<p>Kernel<br />
+Once the required modules loaded, it passes the control to the actual
+kernel which resides in /boot/. An example kernel file has shown
 below.</p>
 <pre><code>[root@t-centos-7 ~]# ls -ltr /boot/vmlinuz-*    
 -rwxr-xr-x. 1 root root 6224704 Apr 20 12:57 /boot/vmlinuz-3.10.0-862.el7.x86_64    
