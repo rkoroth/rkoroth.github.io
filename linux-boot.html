@@ -32,7 +32,7 @@ critical files. Linux booting is a multistage process from the boot
 strap code to the shell until you get the login prompt. One can predict
 and troubleshoot an un-bootable system if he has clear understanding
 about the boot process.</p>
-<p>Firmware<br />
+<p><strong>Firmware</strong><br />
 This is the very first stage of booting any system. When a system starts
 up, until the power good signal (gray cable in SMPS) triggers, CPU
 receives a reset signal from chip-set. It releases the reset once the
@@ -56,7 +56,7 @@ non-volatile memory and its generally integrated with the clock chip or
 inside the south bridge on modern systems. It requires a very low
 current power source to retain its content generally a small lithium
 battery (Known as CMOS battery).</p>
-<p>Bootstrap<br />
+<p><strong>Bootstrap</strong><br />
 Once the system identifies the first boot device, lets say a hard disk,
 it address the MBR (Master Boot Record) which resides in Cylinder 0,
 head 0 and sector 1. Generally a sector of hard disk is 512-bytes so as
@@ -69,7 +69,7 @@ considered as invalid MBR by the BIOS and system would not boot. One
 thing should be noted here is MBR is not located in any filesystem, its
 on the raw part of the hard disk so it cannot be viewed from the file
 system. However a low level tool like “dd” can be used to read MBR.</p>
-<p>GRUB<br />
+<p><strong>GRUB</strong><br />
 As you might already know, GRUB(GRand Unified Bootloader) is a boot
 loader like LILO (Linux Loader). GRUB has three stages of operation.
 Stage-1, 1.5 and 2. The above said MBR is the first stage of GRUB and it
@@ -117,7 +117,7 @@ doesn’t have separate stages (eg: stage1/1.5)</p>
 <p>dd command can be used for extracting MBR. In the above example
 /dev/sda is the boot disk. od command converts the binary data to
 hex.</p>
-<p>Initramfs<br />
+<p><strong>Initramfs</strong><br />
 Once the system read the grub.conf file, it identifies the location of
 initrd image from it. Initrd_Initial ramdisk_is a compressed file which
 contains all the required modules for the kernel. Older kernel uses
@@ -163,7 +163,7 @@ on the system configuration and assists kernel to load by providing all
 the required modules. for example, booting a system from SAN. It has
 similar file system structure of a system such as /etc, /lib etc and
 contains programs like insmod and rmmod to load and unload modules.</p>
-<p>Kernel<br />
+<p><strong>Kernel</strong><br />
 Once the required modules loaded, it passes the control to the actual
 kernel which resides in /boot/. An example kernel file has shown
 below.</p>
