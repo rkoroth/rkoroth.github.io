@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>hdacard-details</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="mystyle.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.7">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="rkoroth-how-to-list-hba-card-details-in-linux"><a
+href="https://rkoroth.github.io"><strong>~rkoroth/</strong></a> How to
+list HBA card details in Linux</h1>
+<div class="b">
+<p>First check the HBA card listing in the pci bus. (Please note below
+example taken from a VirtualBox vm)</p>
+<pre><code>2h2c]#lspci 
+00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma] (rev 02)
+00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
+00:01.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+00:02.0 VGA compatible controller: InnoTek Systemberatung GmbH VirtualBox Graphics Adapter
+00:03.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
+00:04.0 System peripheral: InnoTek Systemberatung GmbH VirtualBox Guest Service
+00:05.0 Multimedia audio controller: Intel Corporation 82801AA AC&#39;97 Audio Controller (rev 01)
+00:06.0 USB controller: Apple Inc. KeyLargo/Intrepid USB
+00:07.0 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 08)
+00:08.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
+00:09.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet Controller (rev 02)
+00:0d.0 SATA controller: Intel Corporation 82801HM/HEM (ICH8M/ICH8M-E) SATA Controller [AHCI mode] (rev 02)
+2h2c]#</code></pre>
+<p>Now check the status of driver using below command</p>
+<pre><code>2h2c]#lsmod </code></pre>
+<p>If the driver is also loaded properly you can check the details of
+the device using below</p>
+<pre><code>2h2c]#cat /sys/class/scsi_host/host(x)/state 
+running
+2h2c]#
+</code></pre>
+<p>Also</p>
+<pre><code>2h2c]#cat /proc/scsi/scsi 
+Attached devices:
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor: VBOX     Model: CD-ROM           Rev: 1.0 
+  Type:   CD-ROM                           ANSI  SCSI revision: 05
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: VBOX HARDDISK    Rev: 1.0 
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: VBOX HARDDISK    Rev: 1.0 
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi4 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: VBOX HARDDISK    Rev: 1.0 
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+2h2c]#
+</code></pre>
+<p>/proc/scsi/scsi will be empty in newer system</p>
+<p>List the scsi channels</p>
+<pre><code>2h2c]#cat /proc/scsi/scsi | egrep -i &#39;Host:&#39;
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+Host: scsi4 Channel: 00 Id: 00 Lun: 00</code></pre>
+<p>How to scan a newly added LUN in Linux</p>
+<pre><code>echo &quot;- - -&quot; &gt;/sys/class/scsi_host/host(x)/scan</code></pre>
+</div>
+</body>
+</html>
