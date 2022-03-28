@@ -34,8 +34,8 @@ enable.</p>
 <h2 id="yum-frequently-used-commands">YUM frequently used commands</h2>
 <table>
 <colgroup>
-<col style="width: 73%" />
-<col style="width: 26%" />
+<col style="width: 39%" />
+<col style="width: 60%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -52,7 +52,224 @@ enable.</p>
 <td>yum update “package-name”</td>
 <td>To update a single package</td>
 </tr>
+<tr class="odd">
+<td>yum group update “group name”</td>
+<td>To update a package group</td>
+</tr>
+<tr class="even">
+<td>yum group summary</td>
+<td>Summary of installed groups</td>
+</tr>
+<tr class="odd">
+<td>yum group info “package-group”</td>
+<td>To list detailed information about a group</td>
+</tr>
+<tr class="even">
+<td>yum group list ids</td>
+<td>To list available group</td>
+</tr>
+<tr class="odd">
+<td>yum group install “groupname”</td>
+<td>To install a group</td>
+</tr>
+<tr class="even">
+<td>yum group install “group id”</td>
+<td>To install a group with its id</td>
+</tr>
+<tr class="odd">
+<td>yum update</td>
+<td>To update all packages</td>
+</tr>
+<tr class="even">
+<td>yum update –security</td>
+<td>To update the package version only containing security updates</td>
+</tr>
+<tr class="odd">
+<td>yum update-minimal –security</td>
+<td>Update package only to version containing latest security</td>
+</tr>
+<tr class="even">
+<td>yum seach “search string”</td>
+<td>To search a package on the repo</td>
+</tr>
+<tr class="odd">
+<td>yum list all</td>
+<td>To list details about all installed and available pacakges</td>
+</tr>
+<tr class="even">
+<td>yum list “partial string*”</td>
+<td>To list a partial string containing package name. Here “/” is an
+escape char for *</td>
+</tr>
+<tr class="odd">
+<td>yum list installed</td>
+<td>To list all installed package on the system</td>
+</tr>
+<tr class="even">
+<td>yum info “package-name”</td>
+<td>To check the details of installed and available package. Similar to
+rpm -qa “packge-name”</td>
+</tr>
+<tr class="odd">
+<td>yumdb info “package-name”</td>
+<td>To list the package information including its encryption
+technology</td>
+</tr>
+<tr class="even">
+<td>yum repolist</td>
+<td>To list the repository with its id, name and number of package for
+each enabled repo</td>
+</tr>
+<tr class="odd">
+<td>yum repolist -v (yum repoinfo)</td>
+<td>To list the detailed view of repository</td>
+</tr>
+<tr class="even">
+<td>yum repolist all</td>
+<td>To list repository with disabled repo</td>
+</tr>
+<tr class="odd">
+<td>yum install “package-name” “package2-name”</td>
+<td>To installed multiple package</td>
+</tr>
+<tr class="even">
+<td>yum install -nr “package-name.arch”</td>
+<td>To install package with its architecture</td>
+</tr>
+<tr class="odd">
+<td>yum provides “*/file-name”</td>
+<td>To find out package that contains file-name</td>
+</tr>
+<tr class="even">
+<td>yum localinstall “path”</td>
+<td>To install a package from a local directory</td>
+</tr>
+<tr class="odd">
+<td>yum remove “package-name”</td>
+<td>To remove a package</td>
+</tr>
 </tbody>
 </table>
+<h2 id="yum-transaction-history">YUM transaction history</h2>
+<p>YUM maintains all its transaction in a single sqlite db file. It is
+saved in /var/lib/yum/history directory</p>
+<p>Below are some of the YUM history related commands</p>
+<table>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>yum history list</td>
+<td>To list 20 most recent transactions</td>
+</tr>
+<tr class="even">
+<td>yum history list all</td>
+<td>To list all transactions</td>
+</tr>
+<tr class="odd">
+<td>yum history sync</td>
+<td>To sync installed package with rpmdb or yumdb</td>
+</tr>
+<tr class="even">
+<td>yum history stats</td>
+<td>To list history statistics</td>
+</tr>
+<tr class="odd">
+<td>yum history summary</td>
+<td>To list the summary of package db history</td>
+</tr>
+<tr class="even">
+<td>yum history undo “id”</td>
+<td>To undo a transaction</td>
+</tr>
+<tr class="odd">
+<td>yum history redo “id”</td>
+<td>To redo a transaction</td>
+</tr>
+<tr class="even">
+<td>yum history new</td>
+<td>To start a new transaction history</td>
+</tr>
+</tbody>
+</table>
+<h2 id="yum-repository-configuration">YUM repository configuration</h2>
+<p>YUM repository can be configured either in /etc/yum.conf file in
+[repository] section or /etc/yum.repos.d/“individual file” with .repo
+extension.</p>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>yum-config-manager</td>
+<td>To view the global value of YUM configuration</td>
+</tr>
+<tr class="even">
+<td>yum-config-manager –enable/disable “repo-name”</td>
+<td>To enable or disable a repository</td>
+</tr>
+<tr class="odd">
+<td>yum-config-manager –add-repo “repo url”</td>
+<td>To add a repository</td>
+</tr>
+<tr class="even">
+<td>yum-config-manager –enable *</td>
+<td>To enable all repository</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-to-create-a-yum-repository">How to create a YUM
+repository</h2>
+<ul>
+<li>Install createrepo package</li>
+<li>Copy all required packages that you want into one directory, for
+example /mydirectory/myrepo and run createrepo. See the commands
+below</li>
+</ul>
+<pre><code>yum install createrepo
+
+cd /mydirectory/myrepo
+
+createrepo --database /mydirectory/myrepo
+</code></pre>
+<p>This creates the necessary metadata for the repo and its
+database__for speedup its operations</p>
+<h2 id="upgrading-a-system-offline">Upgrading a System offline</h2>
+<p>Mount the rhel or centos image iso to a directory as block device</p>
+<pre><code>mkdir myiso
+
+mount -o loop iso_image /myiso
+</code></pre>
+<p>Copy media.repo file from the mounted iso to the /etc/yum.repos.d/
+with .repo extension</p>
+<pre><code>cp /myiso/media.repo  /etc/yum.repos.d/myisoupdate.repo</code></pre>
+<p>Edit myisoupdate.repo file pointing to the media location</p>
+<pre><code>baseurl=file:///myiso</code></pre>
+<p>Update the system</p>
+<pre><code>yum update</code></pre>
+<p>Unmount the directory and remove the repository</p>
+<pre><code>umount /myiso
+
+rm /etc/yum.repos.d/myisoupdate.repo`
+</code></pre>
+<p>YUM always creates a new kernel while upgrading the OS. By default it
+will not upgrade the existing kernel. Because of this if there is any
+issue with the upgraded kernel, we have an option to boot the old
+kernel.</p>
+<p>Whereas if we use rpm command to update the OS, always use rpm -i
+kernel to install the new kernel. rpm -u kernel will upgrade the
+existing kernel.</p>
 </body>
 </html>
