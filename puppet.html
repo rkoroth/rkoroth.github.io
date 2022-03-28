@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>puppet</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="mystyle.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.7">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="rkorothpuppet-installation-and-configuration-on-centos-7"><a
+href="https://rkoroth.github.io"><strong>~rkoroth/</strong></a>Puppet
+installation and configuration on CentOS-7</h1>
+<p>Puppet is an open-source Infrastructure Orchestration tool. Its works
+as a clinet-server model and all of its clients read the configuration
+from the server and reconfigure accordingly in a defined interval.
+Puppet Master server has the Master package installed and all of its
+client has the client package.</p>
+<h2 id="install-and-configure-puppet-server">Install and configure
+Puppet Server</h2>
+<p><strong>Configure YUM repo for Puppet</strong></p>
+<p>Add the below repository on both server and client</p>
+<pre><code>rpm -ivh https://yum.puppetlabs.com/el/7/products/x86_64/puppetlabs-release-7-11.noarch.rpm</code></pre>
+<p><strong>Install Puppet Master package</strong></p>
+<pre><code>yum install puppet-server</code></pre>
+<p>Once you install the puppet-server add firewall rule to communicate
+Puppet properly</p>
+<p><strong>Start the puppetmaster to verify the
+installation</strong></p>
+<pre><code>systemctl start  puppetmaster.service</code></pre>
+<p><strong>Configure Puppet master</strong></p>
+<p>On the puppet server in the [main] section of puppet.conf add the
+below.</p>
+<p>dns_alt_names = “server-hostname” , “Another-name-of-server”</p>
+<p>certname = puppet</p>
+<p>The dns_alt_names should be the master server name and its names
+assigned in the DNS or hosts file (comma seperated)</p>
+<p>The certificate name - any name can be given</p>
+<blockquote>
+<p>/etc/puppet/puppet.conf has seperate section for client and Server
+that is “[agent]” and “[main]” respectively.</p>
+</blockquote>
+<p><strong>Generate certificate on Puppet master</strong></p>
+<p>Puppet communicates with the client using SSL so a certificate needs
+to be generated on Master. Master node acts as the Certificate Authority
+(CA)</p>
+<p>Run the below command on Puppet master and wait until it prints the
+Puppet version</p>
+<pre><code>sudo -u puppet puppet master --no-daemonize --verbose</code></pre>
+<p>Once you see the version press ctr+c and exit and run below command
+to verify the certificate</p>
+<pre><code>puppet config print certname</code></pre>
+<p>Additionally below command also be used to generate the
+certificate</p>
+<pre><code>puppet cert generate &lt;CERTNAME&gt; --dns_alt_names=&lt;DNS_ALT_NAMES&gt;</code></pre>
+<p><strong>Start and enable puppetmaster</strong></p>
+<pre><code>systemctl start  puppetmaster.service
+
+systemctl enable puppetmaster</code></pre>
+<h2 id="install-and-configure-puppet-client">Install and configure
+Puppet Client</h2>
+<p><strong>Install client package</strong></p>
+<pre><code>rpm -ivh https://yum.puppetlabs.com/el/7/products/x86_64/puppetlabs-release-7-11.noarch.rpm
+
+yum -y puppet</code></pre>
+<p>Once the client package installation is done, add the below entry to
+point to the master server in /etc/puppet/puppet.conf [agent] section as
+below</p>
+<p>server = puppet</p>
+<p>This should resolve the puppet master from the client either via DNS
+or /etc/hosts</p>
+<p><strong>Intiate signing request</strong></p>
+<p>Run the below command from the client to generate a signing request
+to the server</p>
+<pre><code>puppet agent -t </code></pre>
+<p>This request will be on the server queue waiting for the approval. So
+from the Puppet master accept it as below.</p>
+<p>To list the certificate</p>
+<pre><code>puppet cert list</code></pre>
+<p>To sign the request</p>
+<pre><code>puppet cert sign &lt;client name from the above list&gt; </code></pre>
+<p>To sign all request</p>
+<pre><code>puppet cert sign --all</code></pre>
+<p>Additionally below commands can be used to remove the unwanted
+requests</p>
+<p>To remove a node from master along with its signature</p>
+<pre><code>puppet node clean [hostname]</code></pre>
+<p>To clean a client’s certificate</p>
+<pre><code>puppet cert clean [hostname] </code></pre>
+<p><strong>Now enable and start the agent service</strong></p>
+<pre><code>systemctl start puppet
+
+systemctl enable puppet
+</code></pre>
+<p>To verify the certificate signed properly or not (SHA256
+checksum)</p>
+<pre><code>puppet agent --fingerprint </code></pre>
+<p>Now write a test Puppet manifest and see whether it is working or
+not.</p>
+</body>
+</html>
